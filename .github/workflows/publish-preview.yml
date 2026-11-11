@@ -13,9 +13,9 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: MetaMask/github-tools/.github/workflows/publish-preview.yml@v1
+      id-token: write
+    uses: MetaMask/github-tools/.github/workflows/publish-preview-oidc.yml@71467355933d12d921a12634f4a10aab7fafdbac
     with:
       environment: default-branch
       docs-url: 'https://github.com/MetaMask/release-tools/blob/main/docs/processes/preview-builds.md'
-    secrets:
-      PUBLISH_PREVIEW_NPM_TOKEN: ${{ secrets.PUBLISH_PREVIEW_NPM_TOKEN }}
+      dry-run: true
