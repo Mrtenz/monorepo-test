@@ -29,7 +29,7 @@ jobs:
         id: first
         uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
         with:
-          branch: test-signed-commit-${{ github.run_id }}
+          branch: test-signed-commit-${{ github.run_id }}-${{ github.run_attempt }}
           commit-message: 'Test: add files on a new branch'
 
       - name: Verify first commit
@@ -55,7 +55,7 @@ jobs:
         id: second
         uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
         with:
-          branch: test-signed-commit-${{ github.run_id }}
+          branch: test-signed-commit-${{ github.run_id }}-${{ github.run_attempt }}
           commit-message: 'Test: modify and delete files on an existing branch'
 
       - name: Verify second commit
@@ -74,7 +74,7 @@ jobs:
         id: third
         uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
         with:
-          branch: test-signed-commit-${{ github.run_id }}
+          branch: test-signed-commit-${{ github.run_id }}-${{ github.run_attempt }}
           commit-message: 'Test: nothing to commit'
 
       - name: Verify nothing was committed
@@ -99,7 +99,7 @@ jobs:
         id: fourth
         uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
         with:
-          branch: test-signed-commit-${{ github.run_id }}
+          branch: test-signed-commit-${{ github.run_id }}-${{ github.run_attempt }}
           commit-message: 'Test: commit the index, not the working tree'
 
       - name: Verify the index was committed
@@ -154,7 +154,7 @@ jobs:
         id: commit
         uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
         with:
-          branch: test-persisted-credentials-${{ github.run_id }}
+          branch: test-persisted-credentials-${{ github.run_id }}-${{ github.run_attempt }}
           commit-message: 'Test: persisted credentials'
 
       - name: Verify commit
