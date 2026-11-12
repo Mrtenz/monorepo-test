@@ -1,0 +1,83 @@
+name: Test signed commit
+
+on:
+  push:
+    branches:
+      - mrtenz/test-signed-commit
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Stage new files
+        run: |
+          echo "hello" > new-file.txt
+          printf '#!/bin/sh\necho hi\n' > script.sh
+          chmod +x script.sh
+          ln -s new-file.txt link.txt
+          git add new-file.txt script.sh link.txt
+
+      - name: Create signed commit on a new branch
+        id: first
+        uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
+        with:
+          branch: test-signed-commit-${{ github.run_id }}
+          commit-message: 'Test: add files on a new branch'
+
+      - name: Verify first commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ steps.first.outputs.commit-sha }}
+        run: |
+          test -n "$COMMIT_SHA"
+          test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          test -z "$(git status --porcelain)"
+          git ls-tree HEAD script.sh | grep -q '^100755 '
+          git ls-tree HEAD link.txt | grep -q '^120000 '
+          gh api "repos/$GITHUB_REPOSITORY/commits/$COMMIT_SHA" --jq .commit.verification
+          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$COMMIT_SHA" --jq .commit.verification.verified)" = true
+
+      - name: Stage a modification and a deletion
+        run: |
+          echo "more" >> new-file.txt
+          git rm -q link.txt
+          git add new-file.txt
+
+      - name: Create signed commit on the existing branch
+        id: second
+        uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
+        with:
+          branch: test-signed-commit-${{ github.run_id }}
+          commit-message: 'Test: modify and delete files on an existing branch'
+
+      - name: Verify second commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ steps.second.outputs.commit-sha }}
+        run: |
+          test -n "$COMMIT_SHA"
+          test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          test -z "$(git status --porcelain)"
+          test ! -e link.txt
+          test -z "$(git ls-tree HEAD link.txt)"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/commits/$COMMIT_SHA" --jq .commit.verification.verified)" = true
+
+      - name: Nothing staged
+        id: third
+        uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
+        with:
+          branch: test-signed-commit-${{ github.run_id }}
+          commit-message: 'Test: nothing to commit'
+
+      - name: Verify nothing was committed
+        env:
+          COMMIT_SHA: ${{ steps.third.outputs.commit-sha }}
+        run: test -z "$COMMIT_SHA"
