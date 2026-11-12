@@ -106,13 +106,18 @@ jobs:
         env:
           COMMIT_SHA: ${{ steps.fourth.outputs.commit-sha }}
         run: |
+          set -x
           test -n "$COMMIT_SHA"
           test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
           test "$(git show HEAD:index-file.txt)" = staged
           test -z "$(git ls-tree HEAD new-file.txt)"
           git ls-tree HEAD script.sh | grep -q '^100644 '
 
-          # The working tree is left alone.
+          # The working tree is left alone, so it still differs from the new
+          # HEAD: the unstaged edit, the mode change, and the untracked file.
           test -e new-file.txt
           test -x script.sh
-          test "$(git status --porcelain)" = " M index-file.txt"
+          git status --porcelain
+          test "$(git status --porcelain)" = " M index-file.txt
+           M script.sh
+          ?? new-file.txt"
