@@ -129,6 +129,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Check that an empty extraheader clears the persisted header
+        env:
+          GIT_TRACE_CURL: '1'
+        run: |
+          url="https://github.com/$GITHUB_REPOSITORY"
+          count() { grep -c 'Send header: Authorization' || true; }
+
+          git config --get-all http.https://github.com/.extraheader | sed 's/basic .*/basic <redacted>/'
+
+          without="$(git ls-remote "$url" HEAD 2>&1 | count)"
+          with="$(git -c http.https://github.com/.extraheader= ls-remote "$url" HEAD 2>&1 | count)"
+          echo "Authorization headers without clearing: $without, with clearing: $with"
+
+          test "$without" -ge 1
+          test "$with" -eq 0
+
       - name: Stage a file
         run: |
           echo "hello" > persisted-file.txt
