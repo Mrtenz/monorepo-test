@@ -134,7 +134,7 @@ jobs:
           GIT_TRACE_CURL: '1'
         run: |
           url="https://github.com/$GITHUB_REPOSITORY"
-          count() { grep -c 'Send header: Authorization' || true; }
+          count() { grep -ci 'Send header: Authorization' || true; }
 
           git config --get-all http.https://github.com/.extraheader | sed 's/basic .*/basic <redacted>/'
 
