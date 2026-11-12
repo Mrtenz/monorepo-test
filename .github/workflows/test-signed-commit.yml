@@ -121,3 +121,31 @@ jobs:
           test "$(git status --porcelain)" = " M index-file.txt
            M script.sh
           ?? new-file.txt"
+
+  persisted-credentials:
+    runs-on: ubuntu-latest
+    steps:
+      # The default checkout persists credentials as an `http.extraheader`.
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Stage a file
+        run: |
+          echo "hello" > persisted-file.txt
+          git add persisted-file.txt
+
+      - name: Create signed commit
+        id: commit
+        uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
+        with:
+          branch: test-persisted-credentials-${{ github.run_id }}
+          commit-message: 'Test: persisted credentials'
+
+      - name: Verify commit
+        env:
+          COMMIT_SHA: ${{ steps.commit.outputs.commit-sha }}
+        run: |
+          set -x
+          test -n "$COMMIT_SHA"
+          test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          test -z "$(git status --porcelain)"
