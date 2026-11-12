@@ -81,3 +81,38 @@ jobs:
         env:
           COMMIT_SHA: ${{ steps.third.outputs.commit-sha }}
         run: test -z "$COMMIT_SHA"
+
+      - name: Stage changes that differ from the working tree
+        run: |
+          # The staged content differs from the working tree.
+          echo "staged" > index-file.txt
+          git add index-file.txt
+          echo "unstaged" >> index-file.txt
+
+          # The removal is staged, but the file stays on disk.
+          git rm -q --cached new-file.txt
+
+          # The mode change is staged, but the file stays executable on disk.
+          git update-index --chmod=-x script.sh
+
+      - name: Create signed commit from the index
+        id: fourth
+        uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
+        with:
+          branch: test-signed-commit-${{ github.run_id }}
+          commit-message: 'Test: commit the index, not the working tree'
+
+      - name: Verify the index was committed
+        env:
+          COMMIT_SHA: ${{ steps.fourth.outputs.commit-sha }}
+        run: |
+          test -n "$COMMIT_SHA"
+          test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          test "$(git show HEAD:index-file.txt)" = staged
+          test -z "$(git ls-tree HEAD new-file.txt)"
+          git ls-tree HEAD script.sh | grep -q '^100644 '
+
+          # The working tree is left alone.
+          test -e new-file.txt
+          test -x script.sh
+          test "$(git status --porcelain)" = " M index-file.txt"
