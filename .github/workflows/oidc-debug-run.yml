@@ -72,3 +72,43 @@ jobs:
           yarn npm publish --tag test
         env:
           YARN_NPM_REGISTRY_SERVER: 'https://registry.npmjs.org'
+
+      - name: Publish with Yarn via workspaces foreach
+        run: |
+          mkdir test-monorepo-1
+          cd test-monorepo-1
+          mkdir -p packages/test
+          jq -n '{name: "root", version: "0.0.0", private: true, workspaces: ["packages/*"], packageManager: "yarn@4.17.1"}' > package.json
+          jq -n \
+            --arg name "${PACKAGE}" \
+            --arg version "0.0.0-test.${GITHUB_RUN_ID}.1" \
+            '{name: $name, version: $version, publishConfig: {access: "public"}}' \
+            > packages/test/package.json
+          touch yarn.lock
+          yarn install --no-immutable
+          yarn workspaces foreach --no-private --all exec yarn npm publish --tag test
+        env:
+          YARN_NPM_REGISTRY_SERVER: 'https://registry.npmjs.org'
+
+      - name: Publish with release-tools .yarnrc.yml and sanitise step
+        run: |
+          mkdir test-monorepo-2
+          cd test-monorepo-2
+          mkdir -p packages/test
+          jq -n '{name: "root", version: "0.0.0", private: true, workspaces: ["packages/*"], packageManager: "yarn@4.17.1"}' > package.json
+          jq -n \
+            --arg name "${PACKAGE}" \
+            --arg version "0.0.0-test.${GITHUB_RUN_ID}.2" \
+            '{name: $name, version: $version, publishConfig: {access: "public"}}' \
+            > packages/test/package.json
+          touch yarn.lock
+          curl -sSf https://raw.githubusercontent.com/MetaMask/release-tools/main/.yarnrc.yml -o .yarnrc.yml
+          # The plugin file is not available in this throwaway project.
+          yq -i 'del(.plugins)' .yarnrc.yml
+          yarn install --no-immutable
+          # Same registry stripping as the real sanitise step.
+          yq -i 'del(.npmRegistryServer) | del(.npmPublishRegistry) | del(.npmScopes)' .yarnrc.yml
+          cat .yarnrc.yml
+          yarn workspaces foreach --no-private --all exec yarn npm publish --tag test
+        env:
+          YARN_NPM_REGISTRY_SERVER: 'https://registry.npmjs.org'
