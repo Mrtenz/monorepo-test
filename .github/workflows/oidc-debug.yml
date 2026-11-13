@@ -1,0 +1,23 @@
+name: OIDC debug
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'npm package to publish a test version of'
+        type: string
+        required: true
+        default: '@zuidhoorn/oidc-test'
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/oidc-debug-run.yml
+    with:
+      package: ${{ inputs.package }}
+      environment: default-branch
