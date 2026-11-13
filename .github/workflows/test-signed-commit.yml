@@ -250,3 +250,39 @@ jobs:
           test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
           test -z "$(git symbolic-ref -q HEAD || true)"
           test -z "$(git status --porcelain)"
+
+  triggering-branch:
+    # This adds a commit to the triggering branch, so skip the runs for those
+    # commits. Pushes made with `GITHUB_TOKEN` do not trigger runs anyway.
+    if: ${{ !startsWith(github.event.head_commit.message, 'Test:') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Stage a file
+        run: |
+          echo "${{ github.run_id }}-${{ github.run_attempt }}" > triggering-branch-file.txt
+          git add triggering-branch-file.txt
+
+      - name: Create signed commit on the triggering branch
+        id: commit
+        uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
+        with:
+          branch: ${{ github.ref_name }}
+          commit-message: 'Test: commit to the triggering branch'
+
+      - name: Verify the checkout was moved
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ steps.commit.outputs.commit-sha }}
+        run: |
+          set -x
+          test -n "$COMMIT_SHA"
+          test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          test "$(git symbolic-ref --short HEAD)" = "$GITHUB_REF_NAME"
+          test "$(git rev-parse "refs/remotes/origin/$GITHUB_REF_NAME")" = "$COMMIT_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$GITHUB_REF_NAME" --jq .object.sha)" = "$COMMIT_SHA"
+          test -z "$(git status --porcelain)"
