@@ -1,0 +1,24 @@
+name: Test branch dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to publish a preview build for'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish-preview:
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    uses: MetaMask/github-tools/.github/workflows/publish-preview-oidc.yml@mrtenz/publish-preview-dispatch
+    with:
+      branch: ${{ inputs.branch }}
+      environment: default-branch
+      dry-run: true
