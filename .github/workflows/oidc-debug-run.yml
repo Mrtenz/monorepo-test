@@ -68,6 +68,7 @@ jobs:
             > package.json
           touch yarn.lock
           corepack enable
+          yarn install --no-immutable
           yarn npm publish --tag test
         env:
           YARN_NPM_REGISTRY_SERVER: 'https://registry.npmjs.org'
