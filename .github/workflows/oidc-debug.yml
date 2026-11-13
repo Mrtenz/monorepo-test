@@ -8,16 +8,19 @@ on:
         type: string
         required: true
         default: '@zuidhoorn/oidc-test'
+  issue_comment:
+    types: created
 
 permissions:
   contents: read
 
 jobs:
   run:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.issue.pull_request && startsWith(github.event.comment.body, '@debug-oidc')) }}
     permissions:
       contents: read
       id-token: write
     uses: Mrtenz/oidc-debug-reusable/.github/workflows/oidc-debug-run.yml@main
     with:
-      package: ${{ inputs.package }}
+      package: ${{ inputs.package || '@zuidhoorn/oidc-test' }}
       environment: default-branch
