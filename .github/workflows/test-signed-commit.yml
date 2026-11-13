@@ -17,6 +17,11 @@ jobs:
         with:
           persist-credentials: false
 
+      # The checkout is only moved onto the signed commit if it is on the
+      # branch that was committed to.
+      - name: Check out the target branch
+        run: git checkout -b "test-signed-commit-${{ github.run_id }}-${{ github.run_attempt }}"
+
       - name: Stage new files
         run: |
           echo "hello" > new-file.txt
@@ -39,6 +44,7 @@ jobs:
         run: |
           test -n "$COMMIT_SHA"
           test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          test "$(git rev-parse "refs/remotes/origin/test-signed-commit-${{ github.run_id }}-${{ github.run_attempt }}")" = "$COMMIT_SHA"
           test -z "$(git status --porcelain)"
           git ls-tree HEAD script.sh | grep -q '^100755 '
           git ls-tree HEAD link.txt | grep -q '^120000 '
@@ -145,6 +151,9 @@ jobs:
           test "$without" -ge 1
           test "$with" -eq 0
 
+      - name: Check out the target branch
+        run: git checkout -b "test-persisted-credentials-${{ github.run_id }}-${{ github.run_attempt }}"
+
       - name: Stage a file
         run: |
           echo "hello" > persisted-file.txt
@@ -164,4 +173,80 @@ jobs:
           set -x
           test -n "$COMMIT_SHA"
           test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          test "$(git rev-parse "refs/remotes/origin/test-persisted-credentials-${{ github.run_id }}-${{ github.run_attempt }}")" = "$COMMIT_SHA"
+          test -z "$(git status --porcelain)"
+
+  other-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Record the state of the checkout
+        run: |
+          {
+            echo "HEAD_BEFORE=$(git rev-parse HEAD)"
+            echo "BRANCH_BEFORE=$(git symbolic-ref --short HEAD)"
+            echo "TRACKING_BEFORE=$(git rev-parse "refs/remotes/origin/$(git symbolic-ref --short HEAD)")"
+          } >> "$GITHUB_ENV"
+
+      - name: Stage a file
+        run: |
+          echo "hello" > other-file.txt
+          git add other-file.txt
+
+      - name: Create signed commit on a different branch
+        id: commit
+        uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
+        with:
+          branch: test-other-branch-${{ github.run_id }}-${{ github.run_attempt }}
+          commit-message: 'Test: commit to a different branch'
+
+      - name: Verify the checkout was left alone
+        env:
+          COMMIT_SHA: ${{ steps.commit.outputs.commit-sha }}
+        run: |
+          set -x
+          test -n "$COMMIT_SHA"
+
+          # The checked out branch has not moved, locally or remotely.
+          test "$(git rev-parse HEAD)" = "$HEAD_BEFORE"
+          test "$(git symbolic-ref --short HEAD)" = "$BRANCH_BEFORE"
+          test "$(git rev-parse "refs/remotes/origin/$BRANCH_BEFORE")" = "$TRACKING_BEFORE"
+
+          # The change is still staged, and the other branch is tracked.
+          test "$(git diff --cached --name-only)" = other-file.txt
+          test "$(git rev-parse "refs/remotes/origin/test-other-branch-${{ github.run_id }}-${{ github.run_attempt }}")" = "$COMMIT_SHA"
+
+  detached-head:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Stage a file
+        run: |
+          git checkout --detach
+          echo "hello" > detached-file.txt
+          git add detached-file.txt
+
+      - name: Create signed commit
+        id: commit
+        uses: MetaMask/github-tools/.github/actions/create-signed-commit@mrtenz/signed-commit-action
+        with:
+          branch: test-detached-head-${{ github.run_id }}-${{ github.run_attempt }}
+          commit-message: 'Test: commit from a detached HEAD'
+
+      - name: Verify the checkout was moved
+        env:
+          COMMIT_SHA: ${{ steps.commit.outputs.commit-sha }}
+        run: |
+          set -x
+          test -n "$COMMIT_SHA"
+          test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          test -z "$(git symbolic-ref -q HEAD || true)"
           test -z "$(git status --porcelain)"
