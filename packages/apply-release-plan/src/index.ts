@@ -1,3 +1,5 @@
+// Test change.
+
 import { defaultConfig } from '@changesets/config';
 import {
   defaultDetectOrder,
