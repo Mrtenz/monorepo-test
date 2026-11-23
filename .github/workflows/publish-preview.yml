@@ -38,7 +38,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-    uses: MetaMask/github-tools/.github/workflows/publish-preview-oidc.yml@2a687324fad16c94319a0e8f4921c90c047c22b8
+    uses: MetaMask/github-tools/.github/workflows/publish-preview-oidc.yml@7f4ba9a021dbd78f64aae95441dcba8ea7cc1d56
     with:
       pull-request: ${{ fromJSON(inputs.pull-request || '0') }}
       branch: ${{ inputs.branch }}
