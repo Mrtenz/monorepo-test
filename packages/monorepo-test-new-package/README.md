@@ -1,14 +1,14 @@
-# `@metamask/changesets-changelog`
+# `@metamask/monorepo-test-new-package`
 
 Changesets changelog module for MetaMask
 
 ## Installation
 
-`yarn add @metamask/changesets-changelog`
+`yarn add @metamask/monorepo-test-new-package`
 
 or
 
-`npm install @metamask/changesets-changelog`
+`npm install @metamask/monorepo-test-new-package`
 
 ## Contributing
 

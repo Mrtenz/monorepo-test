@@ -16,7 +16,7 @@
       "path": "./packages/auto-changelog/tsconfig.lint.json"
     },
     {
-      "path": "./packages/changesets-changelog/tsconfig.lint.json"
+      "path": "./packages/monorepo-test-new-package/tsconfig.lint.json"
     },
     {
       "path": "./packages/changesets-lint/tsconfig.lint.json"
