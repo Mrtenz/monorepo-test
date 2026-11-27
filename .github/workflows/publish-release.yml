@@ -17,10 +17,8 @@ concurrency:
 
 jobs:
   build:
-    name: Build and pack release
+    name: Build
     runs-on: ubuntu-latest
-    outputs:
-      has-packages: ${{ steps.pack.outputs.has-packages }}
     steps:
       - name: Checkout and setup environment
         uses: MetaMask/action-checkout-and-setup@v3
@@ -30,22 +28,48 @@ jobs:
           ref: ${{ github.sha }}
       - name: Build
         run: yarn build
-      - name: Pack packages
-        id: pack
-        uses: MetaMask/action-npm-publish/pack@mrtenz/publish-tarballs
+      - name: Upload build output
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-output
+          path: |
+            node_modules/.yarn-state.yml
+            packages/*/dist
 
-  # The jobs that publish are skipped if no packages were packed, and so is the
-  # job that creates the GitHub release, which needs them.
+  # The dry run packs the packages that are released, in a job that didn't run
+  # the build: only the build output that the packages need is restored.
   publish-npm-dry-run:
     name: Dry run publish to NPM
     runs-on: ubuntu-latest
     needs: build
-    if: needs.build.outputs.has-packages == 'true'
+    outputs:
+      checksums: ${{ steps.dry-run.outputs.checksums }}
     steps:
-      - name: Dry run publish to NPM
-        uses: MetaMask/action-npm-publish@mrtenz/publish-tarballs
+      - name: Checkout and setup environment
+        uses: MetaMask/action-checkout-and-setup@v3
         with:
-          use-pack: true
+          is-high-risk-environment: true
+          persist-credentials: false
+          ref: ${{ github.sha }}
+          skip-install: true
+      - name: Download build output
+        uses: actions/download-artifact@v8
+        with:
+          name: build-output
+          path: ${{ runner.temp }}/build-output
+      # Never extract the build output over the checkout: it could overwrite the
+      # manifests.
+      - name: Restore build output
+        run: |
+          mkdir -p node_modules
+          cp "$RUNNER_TEMP/build-output/node_modules/.yarn-state.yml" node_modules/.yarn-state.yml
+          for dist in "$RUNNER_TEMP"/build-output/packages/*/dist; do
+            cp -R "$dist" "packages/$(basename "$(dirname "$dist")")/"
+          done
+      - name: Dry run publish to NPM
+        id: dry-run
+        uses: MetaMask/action-npm-publish@mrtenz/pack-on-dry-run
+        with:
           dry-run: true
           slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           subteam: S042S7RE4AE # @metamask-npm-publishers
@@ -60,11 +84,10 @@ jobs:
       id-token: write
     steps:
       - name: Publish to NPM
-        uses: MetaMask/action-npm-publish@mrtenz/publish-tarballs
+        uses: MetaMask/action-npm-publish@mrtenz/pack-on-dry-run
         with:
-          use-pack: true
           dry-run: false
-          npm-token: ${{ secrets.NPM_TOKEN }}
+          checksums: ${{ needs.publish-npm-dry-run.outputs.checksums }}
 
   publish-release:
     name: Publish release to GitHub
