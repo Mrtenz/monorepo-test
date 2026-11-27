@@ -15,7 +15,7 @@
       "path": "./packages/auto-changelog"
     },
     {
-      "path": "./packages/changesets-changelog"
+      "path": "./packages/monorepo-test-new-package"
     },
     {
       "path": "./packages/changesets-lint"

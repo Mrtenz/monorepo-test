@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.3.0]
+
 ### Changed
 
 - Show colors and progress spinners in the CLI output ([#154](https://github.com/MetaMask/release-tools/pull/154))
@@ -33,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump `@metamask/auto-changelog` from `^6.1.0` to `^7.0.0` ([#103](https://github.com/MetaMask/release-tools/pull/103), [#85](https://github.com/MetaMask/release-tools/pull/85))
 - This package was migrated from [`MetaMask/create-release-branch`](https://github.com/MetaMask/create-release-branch). See [the original changelog](https://github.com/MetaMask/create-release-branch/blob/v4.2.2/CHANGELOG.md) for changes prior to the migration.
 
-[Unreleased]: https://github.com/MetaMask/release-tools/compare/@metamask/create-release-branch@4.2.4...HEAD
+[Unreleased]: https://github.com/MetaMask/release-tools/compare/@metamask/create-release-branch@4.3.0...HEAD
+[4.3.0]: https://github.com/MetaMask/release-tools/compare/@metamask/create-release-branch@4.2.4...@metamask/create-release-branch@4.3.0
 [4.2.4]: https://github.com/MetaMask/release-tools/compare/@metamask/create-release-branch@4.2.3...@metamask/create-release-branch@4.2.4
 [4.2.3]: https://github.com/MetaMask/release-tools/releases/tag/@metamask/create-release-branch@4.2.3

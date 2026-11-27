@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0]
+
 ### Added
 
 - Add local pull request resolution from Git commit subjects ([#84](https://github.com/MetaMask/release-tools/pull/84))
@@ -14,4 +16,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Generate categorized changelog entries ([#88](https://github.com/MetaMask/release-tools/pull/88))
 - Generate Keep a Changelog version headings ([#90](https://github.com/MetaMask/release-tools/pull/90))
 
-[Unreleased]: https://github.com/MetaMask/release-tools/
+[Unreleased]: https://github.com/MetaMask/release-tools/compare/@metamask/monorepo-test-new-package@1.0.0...HEAD
+[1.0.0]: https://github.com/MetaMask/release-tools/releases/tag/@metamask/monorepo-test-new-package@1.0.0
