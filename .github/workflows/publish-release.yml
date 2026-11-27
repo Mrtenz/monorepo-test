@@ -32,6 +32,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: build-output
+          # `.yarn-state.yml` is a hidden file.
+          include-hidden-files: true
           path: |
             node_modules/.yarn-state.yml
             packages/*/dist
